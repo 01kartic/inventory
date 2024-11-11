@@ -1,0 +1,150 @@
+"use client"
+
+import * as React from "react"
+import { Database, Scan, Users, UserPlus, ShoppingCart, Plus, Stack, StackPlus, User } from "@phosphor-icons/react";
+
+import { usePathname } from "next/navigation"
+import {
+    Sidebar,
+    SidebarContent,
+    SidebarHeader,
+    SidebarMenu,
+    SidebarMenuItem,
+    SidebarMenuButton,
+    SidebarMenuSubButton,
+    SidebarSeparator,
+    SidebarFooter,
+} from "./ui/sidebar"
+import { useEffect, useState } from "react";
+
+const data = {
+    navContent: [
+        {
+            title: "Dashboard",
+            url: "/dashboard",
+            icon: Scan,
+            isActive: false,
+        },
+        {
+            title: "Customers",
+            url: "/customers",
+            subURL: "/customers/edit",
+            icon: Users,
+            isActive: false,
+        },
+        {
+            sub: true,
+            title: "Make Bill",
+            url: "/customers/add",
+            icon: UserPlus,
+            isActive: false,
+        },
+        {
+            title: "Products",
+            url: "/products",
+            subURL: "/products/edit",
+            icon: ShoppingCart,
+            isActive: false,
+        },
+        {
+            sub: true,
+            title: "Add Product",
+            url: "/products/add",
+            icon: Plus,
+            isActive: false,
+        },
+        {
+            title: "Stocks",
+            url: "/stocks",
+            subURL: "/stocks/edit",
+            icon: Stack,
+            isActive: false,
+        },
+        {
+            sub: true,
+            title: "Add Stock",
+            url: "/stocks/add",
+            icon: StackPlus,
+            isActive: false,
+        },
+    ],
+    navFooter: [
+        {
+            title: "Profile",
+            url: "/profile",
+            icon: User,
+            isActive: false,
+        }
+    ],
+}
+
+export function AppSidebar({
+    ...props
+}) {
+    const pathname = usePathname();
+    const [navContent, setNavContent] = useState(data.navContent);
+    const [navFooter, setNavFooter] = useState(data.navFooter);
+
+    useEffect(() => {
+        setNavContent(data.navContent.map(item => ({
+            ...item,
+            isActive: item.url === pathname || item.subURL === pathname
+        })));
+
+        setNavFooter(data.navFooter.map(item => ({
+            ...item,
+            isActive: item.url === pathname
+        })));
+    }, [pathname]);
+
+    return (
+        (<Sidebar className="border-r-0" {...props}>
+            <SidebarHeader>
+                <a href="/" className="flex items-center gap-2 px-3 py-1.5">
+                    <Database size={24} weight="fill" className="fill-primary" />
+                    <p className="font-bold text-xl text-primary">Inventory</p>
+                </a>
+            </SidebarHeader>
+            <SidebarSeparator className="m-0 p-0" />
+            <SidebarContent>
+                <SidebarMenu className="p-3">
+                    {navContent.map((item, index) => (
+                        item.sub ? (
+                            <SidebarMenuItem key={index}>
+                                <SidebarMenuSubButton asChild isActive={item.isActive}>
+                                    <a href={item.url}>
+                                        <item.icon />
+                                        <span>{item.title}</span>
+                                    </a>
+                                </SidebarMenuSubButton>
+                            </SidebarMenuItem>
+                        ) :
+                        (<SidebarMenuItem key={index}>
+                            <SidebarMenuButton asChild isActive={item.isActive}>
+                                <a href={item.url}>
+                                    <item.icon />
+                                    <span>{item.title}</span>
+                                </a>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>)
+                    ))}
+                </SidebarMenu>
+            </SidebarContent>
+            <SidebarSeparator className="m-0 p-0" />
+            <SidebarFooter>
+                <SidebarMenu className="p-2">
+                    {navFooter.map((item, index) => (
+                        <SidebarMenuItem key={index}>
+                            <SidebarMenuButton asChild isActive={item.isActive}>
+                                <a href={item.url}>
+                                    <item.icon />
+                                    <span>{item.title}</span>
+                                </a>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    ))}
+                </SidebarMenu>
+            </SidebarFooter>
+        </Sidebar>)
+    );
+}
