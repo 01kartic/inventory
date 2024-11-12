@@ -70,15 +70,19 @@ export default function StockForm({
   }, []);
 
   const getProductDisplay = (productId) => {
-    const product = products.find(p => p._id === productId);
+    const product = products.find(p => p.id === productId);
     if (!product) return "";
     return (
-        <div className="text-start">
-            <p>{product.productName}</p>
-            <small className="text-stone-500">{product.manufactureCompany} | {product.size} | ₹{product.sellingPrice}</small>
-        </div>
+      <div className="text-start">
+        <p>{product.productName}</p>
+        <small className="text-stone-500">{product.manufactureCompany} | {product.size} | ₹{product.sellingPrice}</small>
+      </div>
     );
-};
+  };
+
+  const handleProductSelect = (value,) => {
+    form.setValue(`productId`, value);
+  };
 
   const isEditing = !!initialData;
 
@@ -122,24 +126,24 @@ export default function StockForm({
                         <CommandEmpty>No product found.</CommandEmpty>
                         <CommandGroup>
                           {products.map((product) => (
-                              <CommandItem
-                                key={product._id}
-                                value={`${product.productName} ${product.manufactureCompany} ${product.size}`}
-                                onSelect={() => {
-                                  handleProductSelect(product._id, index);
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    product._id === productField.value
-                                      ? "opacity-100"
-                                      : "opacity-0"
-                                  )}
-                                />
-                                {getProductDisplay(product._id)}
-                              </CommandItem>
-                            )
+                            <CommandItem
+                              key={product.id}
+                              value={`${product.productName} ${product.manufactureCompany} ${product.size}`}
+                              onSelect={() => {
+                                handleProductSelect(product.id);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  product.id === productField.value
+                                    ? "opacity-100"
+                                    : "opacity-0"
+                                )}
+                              />
+                              {getProductDisplay(product.id)}
+                            </CommandItem>
+                          )
                           )}
                         </CommandGroup>
                       </CommandList>

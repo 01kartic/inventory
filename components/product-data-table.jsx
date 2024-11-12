@@ -73,7 +73,7 @@ const ProductDetailsDrawer = ({ product, availableStock }) => {
             <DrawerHeader className="max-w-2xl w-full flex justify-between items-center lg:px-0 pb-4 mx-auto mt-2">
                 <DrawerTitle>Product Details</DrawerTitle>
                 <div className="flex gap-2">
-                    <Link href={`/products/edit?id=${product._id}`}>
+                    <Link href={`/products/edit?id=${product.id}`}>
                         <Button variant="outline" size="sm">
                             <SquarePen size={16} />
                             Edit
@@ -83,7 +83,7 @@ const ProductDetailsDrawer = ({ product, availableStock }) => {
                         title="Product"
                         onDelete={() => {
                             e.preventDefault();
-                            handleDelete(product._id);
+                            handleDelete(product.id);
                         }}
                     >
                         <Button variant="destructiveOutline" size="sm" >
@@ -112,10 +112,10 @@ const ProductDetailsDrawer = ({ product, availableStock }) => {
                             <tr>
                                 <td className="py-3 text-sm font-medium text-gray-500">Availibility</td>
                                 <td className="py-3 text-sm">
-                                    {availableStock[product._id] > 0 ? (
-                                        <Badge className="mr-2">{availableStock[product._id]}</Badge>
+                                    {availableStock[product.id] > 0 ? (
+                                        <Badge className="mr-2">{availableStock[product.id]}</Badge>
                                     ) : ("")}
-                                    {availableStock[product._id] > 0 ? (
+                                    {availableStock[product.id] > 0 ? (
                                         <Badge variant="success">Available</Badge>
                                     ) : (
                                         <Badge variant="destructive">Out of Stock</Badge>
@@ -159,6 +159,7 @@ export default function ProductDataTable() {
     });
 
     const availableStock = useProductAvailability(setIsLoading)
+    console.log("stock :", availableStock)
 
     const fetchProducts = async () => {
         try {
@@ -202,7 +203,7 @@ export default function ProductDataTable() {
     const filteredData = data.filter((item) => {
         if (searchParameter === "all") {
             return Object.keys(item).some((key) =>
-                key !== "_id" &&
+                key !== "id" &&
                 (key === "createdAt"
                     ? formatDate("date", item[key]).toLowerCase().includes(searchTerm.toLowerCase())
                     : item[key].toString().toLowerCase().includes(searchTerm.toLowerCase()))
@@ -296,7 +297,7 @@ export default function ProductDataTable() {
                             </TableRow>
                         ) : (
                             currentItems.map((item) => (
-                                <TableRow key={item._id}>
+                                <TableRow key={item.id}>
                                     <Drawer>
                                         <DrawerTrigger className="cursor-zoom-in" asChild>
                                             <TableCell>{item.productName}</TableCell>
@@ -313,16 +314,16 @@ export default function ProductDataTable() {
                                                 <Tooltip>
                                                     <TooltipTrigger>
                                                         {
-                                                            availableStock[item._id] > 0 ? (
+                                                            availableStock[item.id] && availableStock[item.id] > 0 ? (
                                                                 <Badge variant="success">Available</Badge>
                                                             ) : (
                                                                 <Badge variant="destructive">Out of Stock</Badge>
                                                             )
                                                         }
                                                     </TooltipTrigger>
-                                                    {availableStock[item._id] > 0 ? (
+                                                    {availableStock[item.id] > 0 ? (
                                                         <TooltipContent>
-                                                            {availableStock[item._id]}
+                                                            {availableStock[item.id]}
                                                         </TooltipContent>
                                                     ) : ("")}
                                                 </Tooltip>
@@ -339,7 +340,7 @@ export default function ProductDataTable() {
                                     )}
                                     <TableCell className="sticky right-0 bg-background">
                                         <div className="flex gap-1">
-                                            <Link href={`/products/edit?id=${item._id}`}>
+                                            <Link href={`/products/edit?id=${item.id}`}>
                                                 <Button size="icon" variant="ghost">
                                                     <SquarePen />
                                                 </Button>
@@ -348,7 +349,7 @@ export default function ProductDataTable() {
                                                 title="Product"
                                                 onDelete={() => {
                                                     e.preventDefault();
-                                                    handleDelete(item._id);
+                                                    handleDelete(item.id);
                                                 }}
                                             />
                                         </div>

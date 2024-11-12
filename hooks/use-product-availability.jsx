@@ -42,22 +42,22 @@ export default function useProductAvailability(setIsLoading) {
   }, []);
 
   useEffect(() => {
-    if (stockData.length > 0 && customerData.length > 0 && productsData.length > 0) {
+    if (stockData.length > 0 && productsData.length > 0) {
       const availableStockData = {};
 
       productsData.forEach((product) => {
-        const productStocks = stockData.filter((stock) => stock.productId === product._id);
+        const productStocks = stockData.filter((stock) => stock.productId === product.id);
         const totalStocks = productStocks.reduce((acc, curr) => acc + curr.quantity, 0);
 
         let totalCustomers = 0;
         customerData.forEach((customer) => {
-          const purchasedProduct = customer.products?.find((p) => p.productId === product._id);
+          const purchasedProduct = customer.products?.find((p) => p.productId === product.id);
           if (purchasedProduct) {
             totalCustomers += purchasedProduct.quantity;
           }
         });
 
-        availableStockData[product._id] = totalStocks - totalCustomers;
+        availableStockData[product.id] = totalStocks - totalCustomers;
       });
 
       setAvailableStock(availableStockData);

@@ -79,7 +79,7 @@ export default function CustomerForm() {
     }, []);
 
     const getProductDisplay = (productId) => {
-        const product = products.find(p => p._id === productId);
+        const product = products.find(p => p.id === productId);
         if (!product) return "";
         return (
             <div className="text-start">
@@ -90,7 +90,7 @@ export default function CustomerForm() {
     };
 
     const getProductPrice = (productId) => {
-        const product = products.find(p => p._id === productId);
+        const product = products.find(p => p.id === productId);
         return product ? product.sellingPrice : "0";
     };
 
@@ -268,23 +268,23 @@ export default function CustomerForm() {
                                                                             <CommandEmpty>No product found.</CommandEmpty>
                                                                             <CommandGroup>
                                                                                 {products.map((product) =>
-                                                                                    availableStock[product._id] > 0 ? (
+                                                                                    parseInt(availableStock[product.id]) > 0 ? (
                                                                                         <CommandItem
-                                                                                            key={product._id}
+                                                                                            key={product.id}
                                                                                             value={`${product.productName} ${product.manufactureCompany} ${product.size}`}
                                                                                             onSelect={() => {
-                                                                                                handleProductSelect(product._id, index);
+                                                                                                handleProductSelect(product.id, index);
                                                                                             }}
                                                                                         >
                                                                                             <Check
                                                                                                 className={cn(
                                                                                                     "mr-2 h-4 w-4",
-                                                                                                    product._id === productField.value
+                                                                                                    product.id === productField.value
                                                                                                         ? "opacity-100"
                                                                                                         : "opacity-0"
                                                                                                 )}
                                                                                             />
-                                                                                            {getProductDisplay(product._id)}
+                                                                                            {getProductDisplay(product.id)}
                                                                                         </CommandItem>
                                                                                     ) : null
                                                                                 )}

@@ -1,114 +1,80 @@
 import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
-import { ObjectId } from 'mongodb';
+import { db } from '@/lib/firebase';
+import { collection, doc, getDoc, getDocs, addDoc, setDoc, query, where, orderBy, limit } from 'firebase/firestore';
 
-// Collection name constant
 const COLLECTION_NAME = 'customers';
+const STORE_COLLECTION = 'store';
 
-export async function GET(request) {
+// Generate a new bill number
+async function generateBillNumber() {
+  const storeDoc = await getDoc(doc(db, STORE_COLLECTION, 'store'));
+  if (!storeDoc.exists()) throw new Error('Store not found');
+
+  const storeName = storeDoc.data().storeName || '';
+  const prefix = storeName.split(' ').map(word => word[0].toUpperCase()).join('');
+
+  const date = new Date();
+  const year = date.getFullYear().toString().slice(-2);
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const currentMonthPrefix = `${prefix}-${year}${month}`;
+
+  const customerQuery = query(
+    collection(db, COLLECTION_NAME),
+    where('billNumber', '>=', currentMonthPrefix),
+    where('billNumber', '<', `${currentMonthPrefix}Z`),
+    orderBy('billNumber', 'desc'),
+    limit(1)
+  );
+
+  const querySnapshot = await getDocs(customerQuery);
+  let sequence = '0001';
+
+  if (!querySnapshot.empty) {
+    const lastBillNumber = querySnapshot.docs[0].data().billNumber;
+    const lastSequence = parseInt(lastBillNumber.slice(-4));
+    sequence = (lastSequence + 1).toString().padStart(4, '0');
+  }
+
+  return `${currentMonthPrefix}${sequence}`;
+}
+
+export async function GET() {
   try {
-    const client = await clientPromise;
-    const db = client.db("inventory");
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
-
-    if (!id) {
-      const customers = await db.collection(COLLECTION_NAME).find({}).toArray();
-      return NextResponse.json(customers);
-    } else {
-      try {
-        const customer = await db.collection(COLLECTION_NAME).findOne({
-          _id: new ObjectId(id)
-        });
-        
-        if (!customer) {
-          return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
-        }
-        return NextResponse.json(customer);
-      } catch (error) {
-        return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 });
+    const snapshot = await getDocs(collection(db, COLLECTION_NAME));
+    const customers = snapshot.docs.map(doc => {
+      const data = doc.data();
+      // Convert Firestore timestamps to ISO strings
+      if (data.createdAt) {
+        data.createdAt = data.createdAt.toDate().toISOString();
       }
-    }
+      if (data.updatedAt) {
+        data.updatedAt = data.updatedAt.toDate().toISOString();
+      }
+      return { id: doc.id, ...data };
+    });
+    return NextResponse.json(customers);
   } catch (error) {
-    console.error('GET operation error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch customers' },
-      { status: 500 }
-    );
+    console.error('GET customers error:', error);
+    return NextResponse.json({ error: 'Failed to fetch customers' }, { status: 500 });
   }
 }
 
 export async function POST(request) {
   try {
-    const client = await clientPromise;
-    const db = client.db("inventory");
     const data = await request.json();
+    const billNumber = await generateBillNumber();
 
-    // Generate bill number first to handle any potential errors
-    const billNumber = await generateBillNumber(db);
-
-    // Prepare the customer document with timestamps
     const customerData = {
-      billNumber,
       ...data,
+      billNumber,
       createdAt: new Date(),
       updatedAt: new Date()
     };
 
-    const result = await db.collection(COLLECTION_NAME).insertOne(customerData);
-
-    if (!result.acknowledged) {
-      throw new Error('Failed to insert customer');
-    }
-
-    return NextResponse.json(
-      { ...customerData, _id: result.insertedId },
-      { status: 201 }
-    );
+    const newCustomerRef = await addDoc(collection(db, COLLECTION_NAME), customerData);
+    return NextResponse.json({ id: newCustomerRef.id, ...customerData }, { status: 201 });
   } catch (error) {
-    console.error('POST operation error:', error);
-    return NextResponse.json(
-      { error: 'Failed to create customer' },
-      { status: 500 }
-    );
-  }
-}
-
-async function generateBillNumber(db) {
-  try {
-    const store = await db.collection('store').findOne({});
-    
-    if (!store || !store.storeName) {
-      throw new Error('Store name not found');
-    }
-
-    const storeNameWords = store.storeName.split(' ');
-    const prefix = storeNameWords.map(word => word[0].toUpperCase()).join('');
-
-    const date = new Date();
-    const year = date.getFullYear().toString().slice(-2);
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const currentMonthPrefix = `${prefix}-${year}${month}`;
-
-    const lastCustomer = await db.collection(COLLECTION_NAME)
-      .find({ 
-        billNumber: { 
-          $regex: `^${currentMonthPrefix}` 
-        } 
-      })
-      .sort({ billNumber: -1 })
-      .limit(1)
-      .toArray();
-
-    let sequence = '0001';
-    if (lastCustomer && lastCustomer.length > 0) {
-      const lastSequence = parseInt(lastCustomer[0].billNumber.slice(-4));
-      sequence = (lastSequence + 1).toString().padStart(4, '0');
-    }
-
-    return `${currentMonthPrefix}${sequence}`;
-  } catch (error) {
-    console.error('Generate bill number error:', error);
-    throw new Error('Failed to generate bill number');
+    console.error('POST customers error:', error);
+    return NextResponse.json({ error: 'Failed to create customer' }, { status: 500 });
   }
 }

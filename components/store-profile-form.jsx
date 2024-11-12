@@ -234,14 +234,15 @@ export default function StoreProfileForm() {
                     />
                     <TooltipProvider>
                       <Tooltip>
-                        <TooltipTrigger asChild><Button
+                        <TooltipTrigger asChild>
+                          <Button
                           type="button"
-                          variant="ghost"
+                          variant="destructiveGhost"
                           size="iconSmall"
                           className="absolute top-2 right-2 text-background bg-foreground hover:bg-destructive hover:text-foreground"
                           onClick={handleClearLogo}
                         >
-                          <X className="h-4 w-4" />
+                          <X />
                         </Button>
                         </TooltipTrigger>
                         <TooltipContent variant="destructive" >

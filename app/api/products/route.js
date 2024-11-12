@@ -1,128 +1,97 @@
-// app/api/products/route.js
 import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
-import { ObjectId } from 'mongodb';
+import { db } from '@/lib/firebase';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 
-// Collection name constant
 const COLLECTION_NAME = 'products';
 
 export async function GET(request) {
   try {
-    const client = await clientPromise;
-    const db = client.db("inventory");
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
-    if (!id) {
-      const products = await db.collection(COLLECTION_NAME).find({}).toArray();
-      return NextResponse.json(products);
-    } else {
-      try {
-        const product = await db.collection(COLLECTION_NAME).findOne({
-          _id: new ObjectId(id)
-        });
-        
-        if (!product) {
-          return NextResponse.json({ error: 'Product not found' }, { status: 404 });
-        }
-        return NextResponse.json(product);
-      } catch (error) {
-        return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 });
+    if (id) {
+      // Fetch a specific product by ID
+      const productRef = doc(db, COLLECTION_NAME, id);
+      const productDoc = await getDoc(productRef);
+
+      if (!productDoc.exists()) {
+        return NextResponse.json({ error: 'Product not found' }, { status: 404 });
       }
+
+      const productData = productDoc.data();
+      // Convert Firestore timestamps to ISO strings
+      if (productData.createdAt) {
+        productData.createdAt = productData.createdAt.toDate().toISOString();
+      }
+      if (productData.updatedAt) {
+        productData.updatedAt = productData.updatedAt.toDate().toISOString();
+      }
+
+      return NextResponse.json({ id: productDoc.id, ...productData });
+    } else {
+      // Fetch all products
+      const snapshot = await getDocs(collection(db, COLLECTION_NAME));
+      const products = snapshot.docs.map(doc => {
+        const data = doc.data();
+        // Convert Firestore timestamps to ISO strings
+        if (data.createdAt) {
+          data.createdAt = data.createdAt.toDate().toISOString();
+        }
+        if (data.updatedAt) {
+          data.updatedAt = data.updatedAt.toDate().toISOString();
+        }
+        return { id: doc.id, ...data };
+      });
+
+      return NextResponse.json(products);
     }
   } catch (error) {
-    console.error('GET operation error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch products' },
-      { status: 500 }
-    );
+    console.error('GET products error:', error);
+    return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });
   }
 }
 
 export async function POST(request) {
   try {
-    const client = await clientPromise;
-    const db = client.db("inventory");
     const data = await request.json();
-
-    // Prepare the product document with timestamps
-    const productData = {
-      ...data,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-
-    const result = await db.collection(COLLECTION_NAME).insertOne(productData);
-
-    if (!result.acknowledged) {
-      throw new Error('Failed to insert product');
-    }
-
-    return NextResponse.json(
-      { ...productData, _id: result.insertedId },
-      { status: 201 }
-    );
+    const productData = { ...data, createdAt: new Date(), updatedAt: new Date() };
+    const newProductRef = await addDoc(collection(db, COLLECTION_NAME), productData);
+    return NextResponse.json({ id: newProductRef.id, ...productData }, { status: 201 });
   } catch (error) {
-    console.error('POST operation error:', error);
-    return NextResponse.json(
-      { error: 'Failed to create product' },
-      { status: 500 }
-    );
+    console.error('POST products error:', error);
+    return NextResponse.json({ error: 'Failed to create product' }, { status: 500 });
   }
 }
 
 export async function PUT(request) {
   try {
-    const client = await clientPromise;
-    const db = client.db("inventory");
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-
+    
     if (!id) {
       return NextResponse.json({ error: 'ID is required' }, { status: 400 });
     }
-
-    const data = await request.json();
     
-    // Add updated timestamp
-    const updateData = {
-      ...data,
-      updatedAt: new Date()
-    };
+    const data = await request.json();
+    const updateData = { ...data, updatedAt: new Date() };
+    const productRef = doc(db, COLLECTION_NAME, id);
 
-    try {
-      const result = await db.collection(COLLECTION_NAME).updateOne(
-        { _id: new ObjectId(id) },
-        { $set: updateData }
-      );
-
-      if (result.matchedCount === 0) {
-        return NextResponse.json({ error: 'Product not found' }, { status: 404 });
-      }
-
-      // Fetch the updated document
-      const updatedProduct = await db.collection(COLLECTION_NAME).findOne({
-        _id: new ObjectId(id)
-      });
-
-      return NextResponse.json(updatedProduct);
-    } catch (error) {
-      console.error('Update operation error:', error);
-      return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 });
+    await updateDoc(productRef, updateData);
+    const updatedProduct = await getDoc(productRef);
+    
+    if (!updatedProduct.exists()) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
+
+    return NextResponse.json({ id: updatedProduct.id, ...updatedProduct.data() });
   } catch (error) {
-    console.error('PUT operation error:', error);
-    return NextResponse.json(
-      { error: 'Failed to update product' },
-      { status: 500 }
-    );
+    console.error('PUT products error:', error);
+    return NextResponse.json({ error: 'Failed to update product' }, { status: 500 });
   }
 }
 
 export async function DELETE(request) {
   try {
-    const client = await clientPromise;
-    const db = client.db("inventory");
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
@@ -130,24 +99,10 @@ export async function DELETE(request) {
       return NextResponse.json({ error: 'ID is required' }, { status: 400 });
     }
 
-    try {
-      const result = await db.collection(COLLECTION_NAME).deleteOne({
-        _id: new ObjectId(id)
-      });
-
-      if (result.deletedCount === 0) {
-        return NextResponse.json({ error: 'Product not found' }, { status: 404 });
-      }
-
-      return NextResponse.json({ message: 'Product deleted successfully' });
-    } catch (error) {
-      return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 });
-    }
+    await deleteDoc(doc(db, COLLECTION_NAME, id));
+    return NextResponse.json({ message: 'Product deleted successfully' });
   } catch (error) {
-    console.error('DELETE operation error:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete product' },
-      { status: 500 }
-    );
+    console.error('DELETE products error:', error);
+    return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 });
   }
 }

@@ -25,6 +25,7 @@ import {
 } from "./ui/tooltip";
 import { Separator } from "./ui/separator";
 import DataTableControls from "./ui/data-table-controls";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import Loading from "./ui/loading";
 
@@ -213,7 +214,7 @@ export default function CustomerDataTable() {
     }, []);
 
     const getProduct = (productId) => {
-        return productData.find(p => p._id === productId);
+        return productData.find(p => p.id === productId);
     };
 
     const matchesSearchCriteria = (item, term, parameter) => {
@@ -345,7 +346,7 @@ export default function CustomerDataTable() {
                             </TableRow>
                         ) : (
                             currentItems.map((item) => (
-                                <TableRow key={item._id}>
+                                <TableRow key={item.id}>
                                     <Drawer>
                                         <DrawerTrigger className="cursor-zoom-in" asChild>
                                             <TableCell>{item.billNumber}</TableCell>
@@ -399,7 +400,7 @@ export default function CustomerDataTable() {
                                                                 </TooltipTrigger>
                                                                 <br />
                                                                 <TooltipContent className="flex items-center gap-2">
-                                                                    {productData.find(p => p._id === product.productId)?.productName || 'Product not found'}
+                                                                    {productData.find(p => p.id === product.productId)?.productName || 'Product not found'}
                                                                 </TooltipContent>
                                                             </Tooltip>
                                                         </TooltipProvider>

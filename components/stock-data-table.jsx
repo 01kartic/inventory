@@ -19,7 +19,6 @@ import {
     DrawerTrigger,
 } from "./ui/drawer";
 import { SquarePen, Trash2 } from "lucide-react";
-import Link from "next/link";
 import { toast } from "sonner";
 import DataTableControls from "./ui/data-table-controls";
 import Loading from "./ui/loading";
@@ -74,17 +73,17 @@ const StockDetailsDrawer = ({ stock, product }) => {
             <DrawerHeader className="max-w-2xl w-full flex justify-between items-center lg:px-0 pb-4 mx-auto mt-2">
                 <DrawerTitle>Stock Details</DrawerTitle>
                 <div className="flex gap-2">
-                    <Link href={`/stocks/edit?id=${stock._id}`}>
+                    <a href={`/stocks/edit?id=${stock.id}`}>
                         <Button variant="outline" size="sm">
                             <SquarePen size={16} />
                             Edit
                         </Button>
-                    </Link>
+                    </a>
                     <DeleteDialog
                         title="Stock"
                         onDelete={() => {
                             e.preventDefault();
-                            handleDelete(stock._id);
+                            handleDelete(stock.id);
                         }}
                     >
                         <Button variant="destructiveOutline" size="sm" >
@@ -232,20 +231,20 @@ export default function StockDataTable() {
     }, []);
 
     const getProductDetails = (productId) => {
-        return productData.find(product => product._id === productId) || null;
+        return productData.find(product => product.id === productId) || null;
     };
 
     const matchesSearchCriteria = (item, searchTerm, searchParameter) => {
         const term = searchTerm.toLowerCase();
 
         // Get associated product details
-        const product = productData.find(p => p._id === item.productId);
+        const product = productData.find(p => p.id === item.productId);
 
         if (searchParameter === "all") {
             // If no product found, just search in stock fields
             if (!product) {
                 return Object.keys(item).some((key) =>
-                    key !== "_id" &&
+                    key !== "id" &&
                     (key === "createdAt"
                         ? formatDate("date", item[key]).toLowerCase().includes(term)
                         : item[key].toString().toLowerCase().includes(term))
@@ -256,7 +255,7 @@ export default function StockDataTable() {
             return (
                 // Search in stock fields
                 Object.keys(item).some((key) =>
-                    key !== "_id" &&
+                    key !== "id" &&
                     (key === "createdAt"
                         ? formatDate("date", item[key]).toLowerCase().includes(term)
                         : item[key].toString().toLowerCase().includes(term))
@@ -368,7 +367,7 @@ export default function StockDataTable() {
                             </TableRow>
                         ) : (
                             currentItems.map((item) => (
-                                <TableRow key={item._id}>
+                                <TableRow key={item.id}>
                                     <Drawer>
                                         <DrawerTrigger className="cursor-zoom-in" asChild>
                                             <TableCell>
@@ -406,15 +405,15 @@ export default function StockDataTable() {
                                     )}
                                     <TableCell className="sticky right-0 bg-background">
                                         <div className="flex gap-1">
-                                            <Link href={`/stocks/edit?id=${item._id}`}>
+                                            <a href={`/stocks/edit?id=${item.id}`}>
                                                 <Button size="icon" variant="ghost">
                                                     <SquarePen />
                                                 </Button>
-                                            </Link>
+                                            </a>
                                             <DeleteDialog
                                                 title="Stock"
                                                 onDelete={() => {
-                                                    handleDelete(item._id);
+                                                    handleDelete(item.id);
                                                 }}
                                             />
                                         </div>
