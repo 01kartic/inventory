@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import React, { useEffect, useState } from "react"
 import { Button } from "./ui/button"
@@ -48,7 +48,7 @@ export default function StoreProfileForm() {
         }
         setStoreData(formattedData)
         if (formattedData.logo) {
-          setPreviewUrl(`/${formattedData.logo}`)
+          setPreviewUrl(formattedData.logo)
         }
       }
     } catch (error) {
@@ -135,34 +135,20 @@ export default function StoreProfileForm() {
     const reader = new FileReader()
     reader.onloadend = () => {
       setPreviewUrl(reader.result)
+      setSelectedFile(reader.result)
     }
     reader.readAsDataURL(file)
-    setSelectedFile(file)
   }
 
   const handleLogoUpload = async () => {
     if (!selectedFile) return
 
     setUploadLoading(true)
-    const formData = new FormData()
-    formData.append('file', selectedFile)
 
     try {
-      const uploadRes = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-      })
-
-      if (!uploadRes.ok) {
-        const error = await uploadRes.json()
-        throw new Error(error.message || 'Upload failed')
-      }
-
-      const { url } = await uploadRes.json()
-
       const updatedData = {
         ...storeData,
-        logo: url
+        logo: selectedFile
       }
 
       const storeRes = await fetch('/api/store', {
@@ -177,12 +163,11 @@ export default function StoreProfileForm() {
       }
 
       setStoreData(updatedData)
-      setPreviewUrl(`/${url}`)
       setSelectedFile(null)
-      toast.success("Logo uploaded successfully")
+      toast.success("Logo updated successfully")
     } catch (error) {
       console.error('Upload error:', error)
-      toast.error(error.message || "Failed to upload logo")
+      toast.error(error.message || "Failed to update logo")
     } finally {
       setUploadLoading(false)
     }
@@ -250,7 +235,6 @@ export default function StoreProfileForm() {
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
-
                   </div>
                 ) : (
                   <div className="h-40 w-full border-2 border-dashed rounded-lg flex items-center justify-center bg-secondary">
@@ -279,7 +263,7 @@ export default function StoreProfileForm() {
                       onClick={handleLogoUpload}
                       disabled={uploadLoading}
                     >
-                      {uploadLoading ? (<Loading />) : "Upload"}
+                      {uploadLoading ? (<Loading />) : "Save Logo"}
                     </Button>
                   )}
                 </div>
