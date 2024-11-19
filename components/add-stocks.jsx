@@ -30,7 +30,7 @@ export default function AddStocks() {
             }
 
             toast.success('Stock has been added successfully.');
-            router.push('/stocks');
+            router.push('/admin/stocks');
         } catch (error) {
             throw error;
         } finally {
@@ -49,7 +49,7 @@ export default function AddStocks() {
                         <span>Adding...</span>
                     </div>
                 ) : "Add New"}
-                onCancel={() => router.push('/stocks')}
+                onCancel={() => router.push('/admin/stocks')}
             />
         </div>
     );

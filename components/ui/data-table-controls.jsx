@@ -106,13 +106,13 @@ const DataTableControls = ({
 
         {data.length !== 0 && (
           <div className="flex gap-2">
-            <Button
+            {/* <Button
               variant="outline"
               onClick={handleExport}
             >
               <FileXls />
               Export
-            </Button>
+            </Button> */}
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

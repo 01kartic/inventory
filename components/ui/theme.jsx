@@ -4,7 +4,7 @@ import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Button } from "./button"
 
-export function ThemeToggle() {
+export function ThemeToggle({...props}) {
     const { theme, setTheme } = useTheme()
 
     const toggleTheme = () => {
@@ -18,6 +18,7 @@ export function ThemeToggle() {
             size="icon"
             onClick={toggleTheme}
             className="p-1 rounded-lg"
+            {...props}
         >
             <Sun
                 className="h-6 w-6 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"

@@ -11,6 +11,9 @@ const Toaster = ({
     (<Sonner
       theme={theme}
       className="toaster group"
+      style={{
+        fontFamily: "'Inter', sans-serif"
+      }}
       toastOptions={{
         classNames: {
           toast:

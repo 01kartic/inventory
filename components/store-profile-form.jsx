@@ -201,11 +201,22 @@ export default function StoreProfileForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-4xl mx-auto py-10 px-4">
+    <form onSubmit={handleSubmit} className="max-w-4xl mx-auto py-10 px-4" autoComplete="off">
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Left Column */}
           <div className="space-y-6">
+            {/* Store Name */}
+            <div className="space-y-2">
+              <Label htmlFor="storeName">Store Name</Label>
+              <Input
+                id="storeName"
+                value={storeData.storeName}
+                onChange={(e) => setStoreData(prev => ({ ...prev, storeName: e.target.value }))}
+                required
+              />
+            </div>
+            
             {/* Logo Upload Section */}
             <div className="space-y-2">
               <Label htmlFor="logo">Store Logo</Label>
@@ -263,13 +274,18 @@ export default function StoreProfileForm() {
                       onClick={handleLogoUpload}
                       disabled={uploadLoading}
                     >
-                      {uploadLoading ? (<Loading />) : "Save Logo"}
+                      {uploadLoading ? (<Loading />) : "Upload"}
                     </Button>
                   )}
                 </div>
               </div>
             </div>
 
+            
+          </div>
+
+          {/* Right Column */}
+          <div className="space-y-6">
             {/* Address */}
             <div className="space-y-2">
               <Label htmlFor="address">Address</Label>
@@ -277,20 +293,6 @@ export default function StoreProfileForm() {
                 id="address"
                 value={storeData.address}
                 onChange={(e) => setStoreData(prev => ({ ...prev, address: e.target.value }))}
-                required
-              />
-            </div>
-          </div>
-
-          {/* Right Column */}
-          <div className="space-y-6">
-            {/* Store Name */}
-            <div className="space-y-2">
-              <Label htmlFor="storeName">Store Name</Label>
-              <Input
-                id="storeName"
-                value={storeData.storeName}
-                onChange={(e) => setStoreData(prev => ({ ...prev, storeName: e.target.value }))}
                 required
               />
             </div>

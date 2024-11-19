@@ -92,7 +92,7 @@ export default function StockForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" autoComplete="off">
         <div className="grid gap-6 sm:grid-cols-2">
           <FormField
             control={form.control}

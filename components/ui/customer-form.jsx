@@ -33,6 +33,8 @@ import { useState, useEffect } from "react";
 import { Printer, Plus, TrashSimple, Check, CaretDown, Minus, CalendarBlank } from "@phosphor-icons/react";
 import Loading from "./loading";
 import useProductAvailability from "@/hooks/use-product-availability";
+import { generateBillNumber } from "@/app/api/bill-number";
+import { printInvoice } from "../invoice";
 
 const API_ENDPOINT = '/api/customers';
 const PRODUCT_API = '/api/products';
@@ -40,6 +42,7 @@ const PRODUCT_API = '/api/products';
 export default function CustomerForm() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [products, setProducts] = useState([]);
+    const [billNumber, setBillNumber] = useState('');
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
 
@@ -61,6 +64,21 @@ export default function CustomerForm() {
     });
 
     useEffect(() => {
+        const fetchBillNumber = async () => {
+            setIsLoading(true);
+            try {
+                const billNo = await generateBillNumber();
+                setBillNumber(billNo);
+                console.log('Bill Number:', billNo);
+                setIsLoading(false);
+            } catch (error) {
+                console.error('Error fetching bill number:', error);
+                toast.error('Failed to load bill number');
+                setIsLoading(false);
+            }
+        };
+        fetchBillNumber();
+
         const fetchProducts = async () => {
             setIsLoading(true);
             try {
@@ -120,6 +138,7 @@ export default function CustomerForm() {
             setIsSubmitting(true);
             const submissionData = {
                 ...data,
+                billNumber: billNumber,
                 products: data.products.map(product => ({
                     productId: product.productId,
                     quantity: parseInt(product.quantity)
@@ -141,7 +160,15 @@ export default function CustomerForm() {
             }
 
             await response.json();
-            router.push('/customers');
+
+            const printData = {
+                ...submissionData,
+                createdAt: new Date().toISOString()
+            };
+
+            await printInvoice(printData);
+
+            router.push('/admin/customers');
             toast.success('Customer added successfully');
         } catch (error) {
             console.error('Error adding customer:', error);
@@ -159,7 +186,7 @@ export default function CustomerForm() {
         <div className="flex flex-1 flex-col gap-4 py-4">
             <div className="mx-auto w-full max-w-5xl">
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" autoComplete="off">
                         <div className="grid gap-6 sm:grid-cols-3">
                             <FormField
                                 control={form.control}
@@ -306,6 +333,7 @@ export default function CustomerForm() {
                                                         type="button"
                                                         variant="ghost"
                                                         size="icon"
+                                                        disabled={parseInt(form.getValues(`products.${index}.quantity`)) <= 1 || !isComplete()}
                                                         className="absolute h-6 w-6 top-1/2 -translate-y-1/2 left-2 rounded"
                                                         onClick={() => {
                                                             const currentValue = parseInt(form.getValues(`products.${index}.quantity`)) || 0;
@@ -328,7 +356,7 @@ export default function CustomerForm() {
                                                                 onChange={(e) => {
                                                                     quantityField.onChange(e);
                                                                 }}
-                                                                disabled={!canAdd()}
+                                                                disabled={!isComplete()}
                                                                 className="w-full text-center"
                                                             />
                                                         )}
@@ -337,6 +365,10 @@ export default function CustomerForm() {
                                                         type="button"
                                                         variant="ghost"
                                                         size="icon"
+                                                        disabled={
+                                                            parseInt(form.getValues(`products.${index}.quantity`)) >=
+                                                            availableStock[watchProducts[index]?.productId] || !isComplete()
+                                                        }
                                                         className="absolute h-6 w-6 top-1/2 -translate-y-1/2 right-2 rounded"
                                                         onClick={() => {
                                                             const currentValue = parseInt(form.getValues(`products.${index}.quantity`)) || 0;
@@ -371,7 +403,8 @@ export default function CustomerForm() {
                                                                 type="button"
                                                                 variant="ghost"
                                                                 size="icon"
-                                                                className="absolute h-6 w-6 top-1/2 -translate-y-1/2 left-2 rounded"
+                                                                className="absolute h-8 w-8 top-1/2 -translate-y-1/2 left-2 rounded"
+                                                                disabled={parseInt(form.getValues(`products.${index}.quantity`)) <= 1 || !isComplete()}
                                                                 onClick={() => {
                                                                     const currentValue = parseInt(form.getValues(`products.${index}.quantity`)) || 0;
                                                                     if (currentValue > 1) {
@@ -394,8 +427,8 @@ export default function CustomerForm() {
                                                                             quantityField.onChange(e);
                                                                             handleQuantityChange(e.target.value, index);
                                                                         }}
-                                                                        disabled={!canAdd()}
-                                                                        className="w-full text-center"
+                                                                        disabled={!isComplete()}
+                                                                        className="flex-1 text-center"
                                                                     />
                                                                 )}
                                                             />
@@ -403,10 +436,18 @@ export default function CustomerForm() {
                                                                 type="button"
                                                                 variant="ghost"
                                                                 size="icon"
-                                                                className="absolute h-6 w-6 top-1/2 -translate-y-1/2 right-2 rounded"
+                                                                className="absolute h-8 w-8 top-1/2 -translate-y-1/2 right-2 rounded"
+                                                                disabled={
+                                                                    parseInt(form.getValues(`products.${index}.quantity`)) >=
+                                                                    (availableStock[watchProducts[index]?.productId] || 0) ||
+                                                                    !isComplete()
+                                                                }
                                                                 onClick={() => {
                                                                     const currentValue = parseInt(form.getValues(`products.${index}.quantity`)) || 0;
-                                                                    form.setValue(`products.${index}.quantity`, (currentValue + 1).toString());
+                                                                    const maxStock = availableStock[watchProducts[index]?.productId] || 0;
+                                                                    if (currentValue < maxStock) {
+                                                                        form.setValue(`products.${index}.quantity`, (currentValue + 1).toString());
+                                                                    }
                                                                 }}
                                                             >
                                                                 <Plus size={16} />
@@ -550,7 +591,7 @@ export default function CustomerForm() {
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    onClick={() => router.push('/customers')}
+                                    onClick={() => router.push('/admin/customers')}
                                     disabled={isSubmitting}
                                 >
                                     Cancel
@@ -567,7 +608,7 @@ export default function CustomerForm() {
                                     ) : (
                                         <>
                                             <Printer size={20} />
-                                            Save Bill
+                                            Save and Print
                                         </>
                                     )}
                                 </Button>

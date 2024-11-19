@@ -42,7 +42,7 @@ export default function EditStocks() {
             } catch (error) {
                 console.error('Error fetching stock:', error);
                 toast.error("Failed to load stock data");
-                router.push('/stocks');
+                router.push('/admin/stocks');
             } finally {
                 setIsLoading(false);
             }
@@ -77,7 +77,7 @@ export default function EditStocks() {
             }
 
             toast.success('Stock has been updated successfully.');
-            router.push('/stocks');
+            router.push('/admin/stocks');
             router.refresh();
         } catch (error) {
             console.error('Error updating stock:', error);
@@ -100,7 +100,7 @@ export default function EditStocks() {
                     initialData={stockData}
                     onSubmit={onSubmit}
                     isSubmitting={isSubmitting}
-                    onCancel={() => router.push('/stocks')}
+                    onCancel={() => router.push('/admin/stocks')}
                 />
             )}
         </div>

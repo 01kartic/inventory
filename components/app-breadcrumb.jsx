@@ -36,21 +36,43 @@ const AppBreadcrumb = ({ className, ...props }) => {
                 stocks: 'Stocks'
             };
 
-            const breadcrumbItems = parts.map((part, index) => {
-                const isLast = index === parts.length - 1;
+            const isAdminRoute = parts[0] === 'admin';
+            const relevantParts = isAdminRoute ? parts.slice(1) : parts;
+            const isAdminOnly = isAdminRoute && relevantParts.length === 0;
+
+            let breadcrumbItems = [];
+
+            // Add Admin item if it's an admin route
+            if (isAdminRoute) {
+                breadcrumbItems.push(
+                    <BreadcrumbItem key="admin">
+                        {isAdminOnly && <BreadcrumbPage>Admin</BreadcrumbPage>}
+                        {!isAdminOnly && <BreadcrumbLink href='/admin'>Admin</BreadcrumbLink>}
+                        {!isAdminOnly && <BreadcrumbSeparator />}
+                    </BreadcrumbItem>
+                );
+            }
+
+            // Add the rest of the breadcrumb items
+            const restItems = relevantParts.map((part, index) => {
+                const isLast = index === relevantParts.length - 1;
                 let name;
 
                 if (index === 0) {
                     name = baseRoutes[part] || formatText(part);
                 } else if (index === 1) {
-                    const baseText = parts[0].charAt(0).toUpperCase() +
-                        parts[0].slice(1).toLowerCase().replace(/s$/, '');
+                    const baseText = relevantParts[0].charAt(0).toUpperCase() +
+                        relevantParts[0].slice(1).toLowerCase().replace(/s$/, '');
                     name = `${formatText(part, true)} ${baseText}`;
                 } else {
                     name = formatText(part);
                 }
 
-                const url = '/' + parts.slice(0, index + 1).join('/');
+                // Construct URL with admin prefix if it exists
+                const urlParts = isAdminRoute 
+                    ? ['/admin', ...relevantParts.slice(0, index + 1)]
+                    : ['/', ...relevantParts.slice(0, index + 1)];
+                const url = urlParts.join('/');
 
                 return (
                     <BreadcrumbItem key={url}>
@@ -66,10 +88,10 @@ const AppBreadcrumb = ({ className, ...props }) => {
                 );
             });
 
-            setBreadcrumbs(breadcrumbs => breadcrumbItems);
+            setBreadcrumbs([...breadcrumbItems, ...restItems]);
 
-            const baseRoute = parts[0];
-            const action = parts[1];
+            const baseRoute = relevantParts[0];
+            const action = relevantParts[1];
             const baseText = baseRoute ? formatText(baseRoute) : '';
             const actionText = action ? formatText(action, true) : '';
             const titleText = actionText ? `${actionText} ${baseText}` : baseText;
@@ -80,9 +102,9 @@ const AppBreadcrumb = ({ className, ...props }) => {
     }, [pathname]);
 
     return (
-        <header className={`flex h-14 shrink-0 items-center ${className}`} {...props}>
-            <div className="flex justify-between flex-1 items-center gap-4 px-4">
-                <div className="flex items-center gap-4">
+        <header className={`flex shrink-0 items-center ${className}`} {...props}>
+            <div className="flex justify-between flex-1 items-center gap-1 px-2 lg:px-4">
+                <div className="flex items-center gap-3 lg:gap-4">
                     <SidebarTrigger />
                     {breadcrumbs.length > 0 && (
                         <Separator orientation="vertical" className="h-4" />

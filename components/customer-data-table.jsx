@@ -28,6 +28,8 @@ import DataTableControls from "./ui/data-table-controls";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import Loading from "./ui/loading";
+import { Printer } from "@phosphor-icons/react";
+import { printInvoice } from "./invoice";
 
 const searchParameters = [
     { value: 'billNumber', label: 'Bill Number' },
@@ -54,23 +56,12 @@ const columnList = [
 
 const formatDate = (type, dateString) => {
     if (!dateString || !type) return "";
-
-    try {
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return ""; // Check for invalid date
-
-        const dateOptions = { year: 'numeric', month: 'short', day: 'numeric' };
-        const timeOptions = { hour: '2-digit', minute: '2-digit' };
-
-        return type === "date"
-            ? date.toLocaleDateString('en-US', dateOptions)
-            : type === "time"
-                ? date.toLocaleTimeString('en-US', timeOptions)
-                : "";
-    } catch (error) {
-        console.error('Error formatting date:', error);
-        return "";
-    }
+    const d = new Date(dateString);
+    return type === "date"
+        ? `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`
+        : type === "time"
+            ? `${d.getHours() > 12 ? d.getHours() - 12 : d.getHours()}:${d.getMinutes().toString().padStart(2, '0')} ${d.getHours() >= 12 ? 'PM' : 'AM'}`
+            : "";
 };
 
 const ProductTooltip = ({ product }) => {
@@ -99,6 +90,10 @@ const CustomerDetailsDrawer = ({ customer, products }) => {
         <DrawerContent className="p-2">
             <DrawerHeader className="max-w-2xl w-full flex justify-between items-center lg:px-0 pb-4 mx-auto mt-2">
                 <DrawerTitle>Customer Details</DrawerTitle>
+                <Button variant="outline" size="sm" onClick={() => printInvoice(customer)}>
+                    <Printer size={16} />
+                    Print Bill
+                </Button>
             </DrawerHeader>
             <div className="p-4">
                 <div className="max-w-2xl mx-auto">
@@ -176,7 +171,7 @@ export default function CustomerDataTable() {
         billNumber: true,
         customerName: true,
         mobileNumber: true,
-        productId: true,
+        products: true,
         buyingQuantity: true,
         paymentMode: true,
         createdAt: true
@@ -319,7 +314,7 @@ export default function CustomerDataTable() {
                                 {visibleColumns.mobileNumber && (
                                     <TableHead>Mobile Number</TableHead>
                                 )}
-                                {visibleColumns.productId && (
+                                {visibleColumns.products && (
                                     <TableHead>Product</TableHead>
                                 )}
                                 {visibleColumns.buyingQuantity && (
@@ -331,6 +326,7 @@ export default function CustomerDataTable() {
                                 {visibleColumns.createdAt && (
                                     <TableHead>Entry Date</TableHead>
                                 )}
+                                <TableHead className="text-center sticky right-0 bg-muted">Print Bill</TableHead>
                             </TableRow>
                         </TableHeader>
                     )}
@@ -375,7 +371,7 @@ export default function CustomerDataTable() {
                                     {visibleColumns.mobileNumber && (
                                         <TableCell>{item.mobileNumber}</TableCell>
                                     )}
-                                    {visibleColumns.productId && (
+                                    {visibleColumns.products && (
                                         <TableCell>
                                             {Array.isArray(item.products) && item.products.length > 0 ? (
                                                 item.products.map((product, index) => (
@@ -425,6 +421,16 @@ export default function CustomerDataTable() {
                                             {formatDate("date", item.createdAt)}
                                         </TableCell>
                                     )}
+                                    <TableCell className="sticky text-center right-0 bg-background">
+                                        <button
+                                            className="w-fit p-2 bg-muted cursor-pointer rounded-lg hover:bg-info/15 hover:text-primary"
+                                            onClick={() => {
+                                                printInvoice(item);
+                                            }}
+                                        >
+                                            <Printer size={20} />
+                                        </button>
+                                    </TableCell>
                                 </TableRow>
                             ))
                         )}

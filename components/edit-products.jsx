@@ -35,7 +35,7 @@ export default function EditProduct() {
             } catch (error) {
                 console.error('Error fetching product:', error);
                 toast.error("Failed to load product data");
-                router.push('/products');
+                router.push('/admin/products');
             } finally {
                 setIsLoading(false);
             }
@@ -63,7 +63,7 @@ export default function EditProduct() {
             }
 
             toast.success('Product has been updated successfully.');
-            router.push('/products');
+            router.push('/admin/products');
             router.refresh();
         } catch (error) {
             throw error;

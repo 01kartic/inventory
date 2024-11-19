@@ -45,19 +45,27 @@ export default function useProductAvailability(setIsLoading) {
     if (stockData.length > 0 && productsData.length > 0) {
       const availableStockData = {};
 
+      // Process each product
       productsData.forEach((product) => {
-        const productStocks = stockData.filter((stock) => stock.productId === product.id);
-        const totalStocks = productStocks.reduce((acc, curr) => acc + curr.quantity, 0);
+        // Calculate total stock for the product
+        const productStocks = stockData.filter(
+          (stock) => stock.productId === product.id
+        );
+        const totalStock = productStocks.reduce(
+          (total, stock) => total + (parseInt(stock.quantity) || 0),
+          0
+        );
 
-        let totalCustomers = 0;
-        customerData.forEach((customer) => {
-          const purchasedProduct = customer.products?.find((p) => p.productId === product.id);
-          if (purchasedProduct) {
-            totalCustomers += purchasedProduct.quantity;
-          }
-        });
+        // Calculate total customer purchases for the product
+        const totalPurchased = customerData.reduce((total, customer) => {
+          const customerPurchase = customer.products?.find(
+            (p) => p.productId === product.id
+          );
+          return total + (parseInt(customerPurchase?.quantity) || 0);
+        }, 0);
 
-        availableStockData[product.id] = totalStocks - totalCustomers;
+        // Calculate available stock
+        availableStockData[product.id] = Math.max(0, totalStock - totalPurchased);
       });
 
       setAvailableStock(availableStockData);

@@ -50,21 +50,12 @@ const columnList = [
 
 const formatDate = (type, dateString) => {
     if (!dateString || !type) return "";
-
-    try {
-        const date = new Date(dateString);
-        const dateOptions = { year: 'numeric', month: 'short', day: 'numeric' };
-        const timeOptions = { hour: '2-digit', minute: '2-digit' };
-        if (type === "date") {
-            return date.toLocaleDateString('en-US', dateOptions);
-        }
-        if (type === "time") {
-            return date.toLocaleTimeString('en-US', timeOptions);
-        }
-        return "";
-    } catch (error) {
-        return "";
-    }
+    const d = new Date(dateString);
+    return type === "date"
+        ? `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`
+        : type === "time"
+            ? `${d.getHours() > 12 ? d.getHours() - 12 : d.getHours()}:${d.getMinutes().toString().padStart(2, '0')} ${d.getHours() >= 12 ? 'PM' : 'AM'}`
+            : "";
 };
 
 const StockDetailsDrawer = ({ stock, product }) => {
@@ -73,7 +64,7 @@ const StockDetailsDrawer = ({ stock, product }) => {
             <DrawerHeader className="max-w-2xl w-full flex justify-between items-center lg:px-0 pb-4 mx-auto mt-2">
                 <DrawerTitle>Stock Details</DrawerTitle>
                 <div className="flex gap-2">
-                    <a href={`/stocks/edit?id=${stock.id}`}>
+                    <a href={`/admin/stocks/edit?id=${stock.id}`}>
                         <Button variant="outline" size="sm">
                             <SquarePen size={16} />
                             Edit
@@ -405,7 +396,7 @@ export default function StockDataTable() {
                                     )}
                                     <TableCell className="sticky right-0 bg-background">
                                         <div className="flex gap-1">
-                                            <a href={`/stocks/edit?id=${item.id}`}>
+                                            <a href={`/admin/stocks/edit?id=${item.id}`}>
                                                 <Button size="icon" variant="ghost">
                                                     <SquarePen />
                                                 </Button>

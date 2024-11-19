@@ -49,7 +49,7 @@ export default function ProductForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6" autoComplete="off">
         <div className="grid gap-6 lg:grid-cols-2">
           <FormField
             control={form.control}
@@ -130,7 +130,7 @@ export default function ProductForm({
           <Button
             type="button"
             variant="outline"
-            onClick={() => router.push('/products')}
+            onClick={() => router.push('/admin/products')}
             disabled={isSubmitting}
           >
             Cancel
